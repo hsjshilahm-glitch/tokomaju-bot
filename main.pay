@@ -1,0 +1,62 @@
+import os
+import logging
+from threading import Thread
+from flask import Flask
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+
+# --- biar Render gak mati ---
+app = Flask(__name__)
+@app.route('/')
+def home(): return "Toko Maju Bot Aktif Bos!"
+def run_flask():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
+Thread(target=run_flask, daemon=True).start()
+
+# --- BOT TOKO MAJU ---
+TOKEN = os.environ.get("BOT_TOKEN")
+
+logging.basicConfig(level=logging.INFO)
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Halo Bos! Selamat datang di *Toko Maju* Bos! 🛒\n\n"
+        "Ketik:\n"
+        "/produk - Lihat produk Bos\n"
+        "/harga - Cek harga Bos\n"
+        "/order - Cara order Bos\n"
+        "/alamat - Alamat toko Bos",
+        parse_mode='Markdown'
+    )
+
+async def produk(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("📦 *Produk Toko Maju Bos:*\n- Beras 5kg\n- Minyak 2L\n- Gula 1kg\n- Telur 1kg Bos\n\nKetik /harga Bos buat cek harga Bos!", parse_mode='Markdown')
+
+async def harga(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("💰 *Harga Bos:*\nBeras 5kg = 60k Bos\nMinyak 2L = 30k Bos\nGula 1kg = 15k Bos\nTelur 1kg = 28k Bos", parse_mode='Markdown')
+
+async def order(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("📝 *Cara Order Bos:*\nChat aja Bos mau apa Bos, nanti admin bales Bos! Atau ketik alamat Bos lengkap Bos!")
+
+async def alamat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("📍 Toko Maju, Cianjur Bos! Buka jam 08.00-21.00 Bos!")
+
+async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(f"Siap Bos! Pesan Bos '{update.message.text}' udah diterima Bos! Admin Toko Maju segera cek Bos 🙏\n\nKetik /produk Bos buat lihat barang Bos!")
+
+def main():
+    if not TOKEN:
+        print("BOT_TOKEN belum di set Bos!")
+        return
+    application = Application.builder().token(TOKEN).build()
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("produk", produk))
+    application.add_handler(CommandHandler("harga", harga))
+    application.add_handler(CommandHandler("order", order))
+    application.add_handler(CommandHandler("alamat", alamat))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, auto_reply))
+    application.run_polling()
+
+if __name__ == '__main__':
+    main()
